@@ -1,3 +1,10 @@
+/**
+ * Names:  Andrew Hoffman, Chase Revia, Robert Elmore, Ralph E. Beard IV
+ * Course #:  1174
+ * Date:  
+ * Assignment Name: Group Project Poker
+ */
+
 package application;
 	
 import javafx.application.Application;
