@@ -42,6 +42,7 @@ public class PokerGame extends Application {
 	private int numberOfDecks = 1; // integer to keep track of the number of decks being used
 	private int numberOfCardsInDeck = 52; // this will be the number of cards in the deck which changes with wildcards
 	private int playerWalletAmount = 200; // how much the player has to bet
+	private int currentAvatar = 0; // This will hold the index of the current avatar
 	private Button drawButton = new Button("Draw"); // This button will be used to draw new cards
 	private Button forfeitButton = new Button("Forfeit"); // This button allows the player to forfeit the hand and the wager
 	private Button dealButton = new Button("Deal"); // button to set the bet and deal the cards
@@ -50,6 +51,7 @@ public class PokerGame extends Application {
 	private Label playerWalletLabel = new Label(); // this will show the current amount left to bet
 	private Label alertLabel = new Label(" "); // tells the player what they won with
 	private GameMechanics gameMechanics = new GameMechanics(); // this variable will handle the overall mechanics of the gameStatus
+	private ImageView avatarImageView = new ImageView(); // this is the ImageView for the user's avatar
 
 	/**
 	 * Main method to start the program and just ensure that the start method is
@@ -68,7 +70,43 @@ public class PokerGame extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 
+		VBox layoutBox = createLayoutBox(); // this is the layout arranged as we like
+
+		Scene scene = new Scene(layoutBox); // This is the scene to place onto the stage for display
+
+		primaryStage.setTitle("Poker Hand");
+		primaryStage.setScene(scene);
+		primaryStage.setResizable(false);
+		primaryStage.show();
+
+	}
+	
+	
+	/**
+	 * creates the layout we see on screen
+	 * @return
+	 */
+	private VBox createLayoutBox() {
 		gameMechanics.populateDeck();
+		
+		HBox upperLayoutBox = createUpperLayoutBox();
+		
+		createCardsBox();
+
+		VBox layoutBox = new VBox(); // This layout holds the button and 5 card ImageViews vertically
+		layoutBox.setPadding(new Insets(0, 5, 0, 5));
+		layoutBox.setSpacing(5);
+		layoutBox.getChildren().addAll(upperLayoutBox, cardsBox);
+		
+		return layoutBox;
+		
+	}
+	
+	/**
+	 * This creates the area above the cards that manages controls and displays the avatar
+	 * @return
+	 */
+	public HBox createUpperLayoutBox() {
 		
 		drawButton.setOnMouseClicked(e -> {
 			gameMechanics.drawCards();
@@ -118,30 +156,65 @@ public class PokerGame extends Application {
 
 		HBox alertBox = new HBox(); // this HBox is just used to show what the person won with
 		alertBox.setSpacing(5);
-		alertBox.getChildren().add(alertLabel);		
-
+		alertBox.getChildren().add(alertLabel);				
+			
+		VBox menuAlertBox = new VBox(); // This VBox holds the menu and alert HBoxs
+		menuAlertBox.setSpacing(5);
+		menuAlertBox.getChildren().addAll(menuBox, placeBetsBox, alertBox);
+		
+		manageAvatars();
+		
+		HBox upperLayoutBox = new HBox();
+		upperLayoutBox.setSpacing(5);
+		upperLayoutBox.getChildren().addAll(avatarImageView, menuAlertBox);
+		
+		return upperLayoutBox;		
+		
+	}
+	
+	/**
+	 * This method will handle the avatars and click event to change them
+	 */
+	private void manageAvatars() {
+		
+		avatarImageView.setImage(changeImage(true));
+		avatarImageView.setOnMouseClicked(e -> {
+			avatarImageView.setImage(changeImage(false));
+		});
+		
+	}
+	
+	private Image changeImage(boolean isInitial) {
+		
+		String[] avatarNames = {"ghost_skull.png", "anime_man.png", "archer.png", "bunny.png", "goblin.png", 
+				"maze_man.png", "penguin.png", "snowman.png", "steampunk_woman.png", "sugar_skull.png", 
+				"vampire_smiley.png", "witch.jpg"};  // this array holds all the file names for the avatars
+		if (!isInitial) {
+			if (currentAvatar == 11) {
+				currentAvatar = 0;
+			} else {
+				currentAvatar ++;
+			}
+		}		
+		String fileName = avatarNames[currentAvatar];
+		String fullFileName = "file:" + System.getProperty("user.dir") + File.separator + "resources"
+				+ File.separator + "player_avatars" + File.separator + fileName;// This creates the full file name with path
+																		        // for the image in a format readable by any
+																		        // system
+		return new Image(fullFileName, 60, 60, true, true);
+		
+	}
+	
+	
+	/**
+	 * This creates the area for the cards
+	 */
+	public void createCardsBox() {
 		cardsBox.setSpacing(5);
 		for (int i = 0; i < 5; i++) {
 			playerCards.add(new PlayerCard(0));
 			cardsBox.getChildren().add(playerCards.get(i));
 		}
-			
-		VBox menuAlertBox = new VBox(); // This VBox holds the menu and alert HBoxs
-		menuAlertBox.setSpacing(5);
-		menuAlertBox.getChildren().addAll(menuBox, placeBetsBox, alertBox);
-
-		VBox layoutBox = new VBox(); // This layout holds the button and 5 card ImageViews vertically
-		layoutBox.setPadding(new Insets(0, 5, 0, 5));
-		layoutBox.setSpacing(5);
-		layoutBox.getChildren().addAll(menuAlertBox, cardsBox);
-
-		Scene scene = new Scene(layoutBox); // This is the scene to place onto the stage for display
-
-		primaryStage.setTitle("Poker Hand");
-		primaryStage.setScene(scene);
-		primaryStage.setResizable(false);
-		primaryStage.show();
-
 	}
 
 	/**
