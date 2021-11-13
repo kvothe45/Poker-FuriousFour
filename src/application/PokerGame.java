@@ -514,25 +514,73 @@ public class PokerGame extends Application {
 		 */
 		private String isWon(int[] cardNumberOrder) {
 
-			cardNumberOrderSort(cardNumberOrder);
-			if (isFlush(cardNumberOrder)) {
-				if (isStraight(cardNumberOrder)) {
-					int tempFirstNumber = convertToActualNumber(cardNumberOrder[0]); // value of first card to see if
-																						// it's an ace
-					int tempFinalNumber = convertToActualNumber(cardNumberOrder[4]); // value of last card to see if
-																						// it's a king
-					if (tempFirstNumber == 1 && tempFinalNumber == 13) {
-						return "Royal Flush";
-					}
-					return "Straight Flush";
+			int numberOfWilds = 0;  // holds the number of wilds in the player's hand
+			Integer[] cardValues = new Integer[5]; // this holds just the card numeric values regardless of suit
+			boolean[] handResults = new boolean[8]; // this holds whether the hand contains a certain winning hand or not
+			
+			for (int i = 0; i < 5; i++) {
+				if (cardNumberOrder[i] > 52) {
+					cardValues[i] = cardNumberOrder[i]; 
+					numberOfWilds ++;
+				} else {
+					cardValues[i] = convertToActualNumber(cardNumberOrder[i]);
 				}
-				return "Flush";
-			} else if (isStraight(cardNumberOrder)) {
-				return "Straight";
-			} else {
-				return checkForMatching(cardNumberOrder);
 			}
+			
+			cardNumberOrderSort(cardNumberOrder);
+			sort(cardValues);
+			if (numberOfWilds > 0) {
+				handResults[0] = isFiveOfAKind(cardValues, numberOfWilds);
+			}
+			
+			handResults[1] = isFlush(cardNumberOrder, numberOfWilds);
+			handResults[2] = isStraight(cardValues, numberOfWilds);
+			handResults[3] = handResults[2] && ((cardValues[0] == 1 && cardValues[1] >= 10) || cardValues[0] >= 10);
+			checkForMatching(cardValues, numberOfWilds, handResults);
+			
+			if(handResults[0]) {
+				return "Five of a Kind";
+			} else if(handResults[1] && handResults[3]) {
+				return "Royal Flush";
+			} else if (handResults[1] && handResults[2]) {
+				return "Straight Flush";
+			} else if (handResults[4]) {
+				return "Four of a Kind";
+			} else if (handResults[5]) {
+				return "Full House";
+			} else if (handResults[1]) {
+				return "Flush";
+			} else if (handResults[2]) {
+				return "Straight";
+			} else if (handResults[6]) {
+				return "Three of a Kind";
+			} else if (handResults[7]) {
+				return "Two Pair";
+			} else {
+				return "";
+			}
+		
 
+		}
+		
+		/**
+		 * This goes through the deck to see if the hand is five of a kind
+		 * @param cardNumberOrder
+		 * @param numberOfWilds
+		 * @return
+		 */
+		private boolean isFiveOfAKind(Integer[] cardNumberOrder, int numberOfWilds) {
+			
+			if (numberOfWilds < 4) {
+				for (int i = 0; i < 5 - numberOfWilds; i++) {
+					if (cardNumberOrder[0] != cardNumberOrder[i]) {
+						return false;
+					}
+				}
+			}
+			
+			return true;
+			
 		}
 
 		/**
@@ -541,14 +589,14 @@ public class PokerGame extends Application {
 		 * @param cardNumberOrder
 		 * @return
 		 */
-		private boolean isFlush(int[] cardNumberOrder) {
+		private boolean isFlush(int[] cardNumberOrder, int numberOfWilds) {
 
 			int suitSet = cardNumberOrder[0] / 13; // this gets the numeric value of the suit of the first card to set
 													// upper and lower bounds
 			int lowerBound = (13 * suitSet) + 1; // is the numberic value of the ace of the suit the first card is
-			int upperBound = lowerBound + 12; // numeric value of the king of suit the first card is in
+			int upperBound = lowerBound + 12; // numeric value of the king of suit the first card is in			
 
-			for (int i = 1; i < 5; i++) {
+			for (int i = 1; i < 5 - numberOfWilds; i++) {
 				if (cardNumberOrder[i] < lowerBound || cardNumberOrder[i] > upperBound)
 					return false;
 			}
@@ -561,75 +609,74 @@ public class PokerGame extends Application {
 		 * @param cardNumberOrder
 		 * @return
 		 */
-		private boolean isStraight(int[] cardNumberOrder) {
-
-			for (int i = 1; i < 4; i++) {
-				int tempLowerCard = convertToActualNumber(cardNumberOrder[i]); // value of the first card to compare
-				int tempUpperCard = convertToActualNumber(cardNumberOrder[i + 1]); // value of next card to compare
-				if (tempLowerCard != (tempUpperCard - 1)) {
+		private boolean isStraight(Integer[] cardValues, int numberOfWilds) {
+			
+			if (cardValues[0] == 1) {
+				if (cardValues[4 - numberOfWilds] > 5 && cardValues[1] < 10) {
 					return false;
+				} else {
+					return !anyRepeats(cardValues, numberOfWilds);
+				}
+			} else if ((cardValues[4 - numberOfWilds] - cardValues[0]) > 5 ) {
+				return false;
+			} else {
+				return !anyRepeats(cardValues, numberOfWilds);
+			}
+			
+		}
+		
+		/**
+		 * This checks to see if any card in the array repeats itself
+		 * @param cardValues
+		 * @param numberOfWilds
+		 * @return
+		 */
+		private boolean anyRepeats(Integer[] cardValues, int numberOfWilds) {
+			for (int i = 0; i < 4 - numberOfWilds; i++) {
+				if (cardValues[i] == cardValues[i + 1]) {
+					return true;
 				}
 			}
-			int tempFirstNumber = convertToActualNumber(cardNumberOrder[0]); // value of first card in the hand to
-																				// compare to the second card or last
-																				// depending on if it's an ace or not
-			int tempSecondNumber = convertToActualNumber(cardNumberOrder[1]); // value of second card to compare with
-																				// the first
-			int tempFinalNumber = convertToActualNumber(cardNumberOrder[4]); // value of last card to compare with the
-																				// first if the first is an ace
-			if ((tempFirstNumber != 1) && (tempFirstNumber == (tempSecondNumber - 1))) {
-				return true;
-			} else if ((tempFirstNumber == 1) && (tempSecondNumber == 2) || (tempFinalNumber == 13)) {
-				return true;
-			}
-
 			return false;
 		}
 
-		private String checkForMatching(int[] cardNumberOrder) {
-			for (int i = 0; i < 5; i++) {
-				cardNumberOrder[i] = convertToActualNumber(cardNumberOrder[i]);
-			}
-
-			// check for 4 of a kind
-			if ((cardNumberOrder[0] == cardNumberOrder[1] && cardNumberOrder[0] == cardNumberOrder[2]
-					&& cardNumberOrder[0] == cardNumberOrder[3])
-					|| (cardNumberOrder[1] == cardNumberOrder[2] && cardNumberOrder[1] == cardNumberOrder[3]
-							&& cardNumberOrder[1] == cardNumberOrder[4])) {
-				return "Four of a Kind";
-			}
-			// check for 3 of a kind
-			if (cardNumberOrder[0] == cardNumberOrder[1] && cardNumberOrder[0] == cardNumberOrder[2]) {
-				// check for full house
-				if (cardNumberOrder[3] == cardNumberOrder[4]) {
-					return "Full House";
+		private void checkForMatching(Integer[] cardValues, int numberOfWilds, boolean[] handResults) {
+			
+			int[] indexOfRepeats = new int[5];
+			int firstRepeatedNumber = 0;
+			int secondRepeatedNumber = 0;
+			
+			for (int i = 0; i < 4 - numberOfWilds; i++) {
+				for (int j = i + 1; j < 5 - numberOfWilds; j++) {
+					if ((indexOfRepeats[i] != -1) && (cardValues[i] == cardValues[j])) {
+						indexOfRepeats[i]++;
+						indexOfRepeats[j] = -1; 
+					}
 				}
-				return "Three of a Kind";
-			} else if (cardNumberOrder[2] == cardNumberOrder[3] && cardNumberOrder[2] == cardNumberOrder[4]) {
-				// check for full house
-				if (cardNumberOrder[0] == cardNumberOrder[1]) {
-					return "Full House";
-				}
-				return "Three of a Kind";
-			} else if (cardNumberOrder[1] == cardNumberOrder[2] && cardNumberOrder[1] == cardNumberOrder[3]) {
-				return "Three of a Kind";
 			}
-			// check for a pair
-			if (cardNumberOrder[0] == cardNumberOrder[1]) {
-				if (cardNumberOrder[2] == cardNumberOrder[3] || cardNumberOrder[3] == cardNumberOrder[4]) {
-					return "Two Pair";
+			
+			for (int i = 0; i < 5 - numberOfWilds; i++) {
+				if (indexOfRepeats[i] > 0) {
+					if (firstRepeatedNumber == 0) {
+						firstRepeatedNumber = indexOfRepeats[i] + 1;
+					} else {
+						secondRepeatedNumber = indexOfRepeats[i] + 1;
+					}
 				}
-				return "A Pair";
-			} else if (cardNumberOrder[1] == cardNumberOrder[2]) {
-				if (cardNumberOrder[3] == cardNumberOrder[4]) {
-					return "Two Pair";
-				}
-				return "A Pair";
-			} else if (cardNumberOrder[2] == cardNumberOrder[3] || cardNumberOrder[3] == cardNumberOrder[4]) {
-				return "A Pair";
 			}
-
-			return "";
+			
+			if ((firstRepeatedNumber == 4) || (firstRepeatedNumber == 3 && numberOfWilds == 1) ||
+					(firstRepeatedNumber == 2 && numberOfWilds == 2) || (numberOfWilds ==  3)) {
+				handResults[4] = true;
+			} else if ((firstRepeatedNumber == 2 && secondRepeatedNumber == 3) || (firstRepeatedNumber == 3 && secondRepeatedNumber == 2) ||
+					(firstRepeatedNumber == 2 && secondRepeatedNumber == 2 && numberOfWilds == 1)) {
+				handResults[5] = true;
+			} else if ((firstRepeatedNumber == 3) || (firstRepeatedNumber == 2 && numberOfWilds == 1) ||
+					(numberOfWilds == 2)) {
+				handResults[6] = true;
+			} else if (firstRepeatedNumber == 2 && secondRepeatedNumber == 2) {
+				handResults[7] = true;
+			}
 		}
 
 		/**
@@ -644,9 +691,9 @@ public class PokerGame extends Application {
 			if (actualCardValue == 0) {
 				actualCardValue = 13;
 			}
-
 			return actualCardValue;
 		}
+
 
 		/**
 		 * this resets the deck(s) and the array that holds the ordering
@@ -803,6 +850,36 @@ public class PokerGame extends Application {
 					return 0;
 			}
 
+		}
+		
+		/**
+		 * This method takes a generic ArrayList and
+		 * sorts it.
+		 * @param <E>
+		 * @param list
+		 */
+		public <E extends Comparable<E>> void sort(E[] list) {
+			
+			E currentMin; // holds the current minimum value in the ArrayList
+			int currentMinIndex; // holds the index for the currentMin value
+			
+			for (int i = 0; i < list.length - 1; i++) {
+				currentMin = list[i];
+				currentMinIndex = i;
+				for(int j = i + 1; j < list.length; j++) {
+					if (currentMin.compareTo(list[j]) > 0) {
+						currentMin = list[j];
+						currentMinIndex = j;
+					}
+					
+				}
+				
+				if (currentMinIndex != i) {
+					list[currentMinIndex] = list[i];
+					list[i] = currentMin;
+				}
+			}
+			
 		}
 
 	}
