@@ -731,7 +731,8 @@ public class PokerGame extends Application {
 		 * the file and sets the ImageView
 		 */
 		private void newHand() {
-			if ((deckOrder.size() - currentPositionInDeck) >= 11 && currentPositionInDeck != 0) {
+			if ((deckOrder.size() - currentPositionInDeck) >= (deckOrder.size() * .25) && 
+					currentPositionInDeck != 0) {
 				int[] cardNumberOrder = new int[5]; // and array to hold just the card numbers in the hand for sorting
 													// and processing
 				for (int i = 0; i < 5; i++) {
