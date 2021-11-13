@@ -15,6 +15,8 @@ import javafx.animation.Interpolator;
 import javafx.animation.RotateTransition;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.stage.Stage;
@@ -22,6 +24,7 @@ import javafx.util.Duration;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
@@ -52,6 +55,7 @@ public class PokerGame extends Application {
 	private Label alertLabel = new Label(" "); // tells the player what they won with
 	private GameMechanics gameMechanics = new GameMechanics(); // this variable will handle the overall mechanics of the gameStatus
 	private ImageView avatarImageView = new ImageView(); // this is the ImageView for the user's avatar
+	private TextField wagerTextField = new TextField(); // this will allow the user to place custom wagers
 
 	/**
 	 * Main method to start the program and just ensure that the start method is
@@ -224,27 +228,38 @@ public class PokerGame extends Application {
 	 * @return
 	 */
 	private HBox createBettingBox() {
-		RadioButton oneDollar, tenDollars, hundredDollars; // radio buttons for the amount of the bet for the hand
-		oneDollar = new RadioButton("$1");
-		tenDollars = new RadioButton("$10");
-		hundredDollars = new RadioButton("$100");
-
-		ToggleGroup bettingGroup = new ToggleGroup(); // toggle group the radio buttons belong to
-		oneDollar.setToggleGroup(bettingGroup);
-		tenDollars.setToggleGroup(bettingGroup);
-		hundredDollars.setToggleGroup(bettingGroup);
-		oneDollar.setSelected(true);
-
-		oneDollar.setFont(Font.font(12));
-		tenDollars.setFont(Font.font(12));
-		hundredDollars.setFont(Font.font(12));
+		
+		wagerTextField.textProperty().addListener(new ChangeListener<String>() {
+			/**
+			 * this method came from stack overflow
+			 * https://stackoverflow.com/questions/7555564/what-is-the-recommended-way-to-make-a-numeric-textfield-in-javafx
+			 */
+			@Override
+			public void changed(ObservableValue<? extends String> observableValue, 
+					String oldValue, String newValue) {
+				if (!newValue.matches("\\d*")) {
+					wagerTextField.setText(newValue.replaceAll("[^\\d]", ""));
+				}
+				
+			}
+		});
+		
+		Button betOneButton = new Button("Bet 1");
+		betOneButton.setOnMouseClicked(e -> {
+			wagerTextField.setText("1");
+		});
+		
+		Button betAllButton = new Button("Bet All");
+		betAllButton.setOnMouseClicked(e -> {
+			wagerTextField.setText(String.valueOf(playerWalletAmount));
+		});
 
 		Label wagerLabel = new Label("Wager: "); // label to describe the toggle group
 		wagerLabel.setFont(Font.font(12));
 
 		HBox betToggleBox = new HBox(); // HBox to hold the label and radio buttons
 		betToggleBox.setSpacing(5);
-		betToggleBox.getChildren().addAll(wagerLabel, oneDollar, tenDollars, hundredDollars);
+		betToggleBox.getChildren().addAll(wagerLabel, wagerTextField, betOneButton, betAllButton);
 
 		return betToggleBox;
 	}
@@ -485,8 +500,14 @@ public class PokerGame extends Application {
 				playerWalletLabel.setText("Wallet $" + playerWalletAmount);
 				alertLabel.setText("You won with " + winLossString);
 			} else {
-				alertLabel.setText("You lost");
+				if (playerWalletAmount > 0) {
+					alertLabel.setText("You lost");
+				}  else {
+					alertLabel.setText("Game Over");
+					dealButton.setDisable(true);
+				}
 			}
+			wagerTextField.setText("");
 
 		}
 		
@@ -495,15 +516,11 @@ public class PokerGame extends Application {
 		 * @return
 		 */
 		private int getWager() {
-			int wager = 0; // used to keep track of the amount of the wager
-			if (((RadioButton) wagerBox.getChildren().get(1)).isSelected()) {
-				wager = 1;
-			} else if (((RadioButton) wagerBox.getChildren().get(2)).isSelected()) {
-				wager = 10;
-			} else if (((RadioButton) wagerBox.getChildren().get(3)).isSelected()) {
-				wager = 100;
+			int wager = Integer.valueOf(wagerTextField.getText());// holds the value of the wager to make certain it's a valid wager
+			if (wager > playerWalletAmount) {
+				wager = playerWalletAmount;
+				wagerTextField.setText(String.valueOf(playerWalletAmount));
 			}
-			
 			return wager;
 		}
 
