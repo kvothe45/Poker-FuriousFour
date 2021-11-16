@@ -458,6 +458,8 @@ public class PokerGame extends Application {
 	 *
 	 */
 	class GameMechanics {
+		
+		int wager = 0; // this variable will be used to manage the wager per hand
 
 		/**
 		 * This method takes a generic ArrayList and 
@@ -482,7 +484,7 @@ public class PokerGame extends Application {
 		 * This method manages the bet and sets the current amount the user has to bet.
 		 */
 		private void manageBet() {
-			int wager = getWager();// used to store the user's wager
+			wager = getWager();// used to store the user's wager
 			playerWalletAmount = playerWalletAmount - wager;
 			playerWalletLabel.setText("Wallet $" + playerWalletAmount);
 			
@@ -492,10 +494,41 @@ public class PokerGame extends Application {
 		 * This method manages the bet after the draw and winning has been determined
 		 */
 		private void manageBet(int[] cardsAfterDraw) {
-			int wager = getWager();// used to store the user's wager
 			String winLossString = isWon(cardsAfterDraw); // gets the type of win from isWon for display
-			if (!winLossString.equals("")) {
-				wager = wager * 2;
+			switch(winLossString) {
+				case "Five of a Kind":
+					break;
+				case "Royal Flush":
+					wager = wager * 250;
+					break;
+				case "Straight Flush":
+					wager = wager * 50;
+					break;
+				case "Four of a Kind":
+					wager = wager * 25;
+					break;
+				case "Flush":
+					wager = wager * 9;
+					break;
+				case "Straight":
+					wager = wager * 6;
+					break;
+				case "Full House":
+					wager = wager * 4;
+					break;
+				case "Three of a Kind":
+					wager = wager * 3;
+					break;
+				case "Two Pair":
+					wager = wager * 2;
+					break;
+				case "":
+					wager = 0;
+					break;
+				
+			};
+			
+			if (wager != 0) {
 				playerWalletAmount = playerWalletAmount + wager;
 				playerWalletLabel.setText("Wallet $" + playerWalletAmount);
 				alertLabel.setText("You won with " + winLossString);
@@ -508,6 +541,10 @@ public class PokerGame extends Application {
 				}
 			}
 			wagerTextField.setText("");
+			wager = 0;
+			
+			
+			
 
 		}
 		
@@ -516,10 +553,14 @@ public class PokerGame extends Application {
 		 * @return
 		 */
 		private int getWager() {
-			int wager = Integer.valueOf(wagerTextField.getText());// holds the value of the wager to make certain it's a valid wager
-			if (wager > playerWalletAmount) {
-				wager = playerWalletAmount;
-				wagerTextField.setText(String.valueOf(playerWalletAmount));
+			if (wagerTextField.getText() != null || !wagerTextField.getText().equals("")) {
+				wager = Integer.valueOf(wagerTextField.getText());// holds the value of the wager to make certain it's a valid wager
+				if (wager > playerWalletAmount) {
+					wager = playerWalletAmount;
+					wagerTextField.setText(String.valueOf(playerWalletAmount));
+				}
+			} else {
+				wager = 1;
 			}
 			return wager;
 		}
