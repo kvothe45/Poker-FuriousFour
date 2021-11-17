@@ -11,6 +11,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
 
+import javax.sound.midi.VoiceStatus;
+
 import javafx.animation.Interpolator;
 import javafx.animation.RotateTransition;
 import javafx.animation.TranslateTransition;
@@ -168,7 +170,7 @@ public class PokerGame extends Application {
 		
 		manageAvatars();
 		
-		HBox upperLayoutBox = new HBox();
+		HBox upperLayoutBox = new HBox();  //To allow for the avatar Image, the upper section is now laid out in an HBox
 		upperLayoutBox.setSpacing(5);
 		upperLayoutBox.getChildren().addAll(avatarImageView, menuAlertBox);
 		
@@ -285,7 +287,6 @@ public class PokerGame extends Application {
 		private Image cardImage, cardBackImage;
 		private ImageView cardImageView = new ImageView();
 		private ImageView cardBackImageView = new ImageView();
-		private ToggleButton holdButton = new ToggleButton("Hold");
 		private StackPane cardPane;
 		private boolean primaryCardBack = true;
 		
@@ -315,7 +316,19 @@ public class PokerGame extends Application {
 			flipCard();
 			cardPane = new StackPane();
 			cardPane.getChildren().addAll(cardBackImageView, cardImageView);
-			this.getChildren().addAll(cardPane, holdButton);
+			this.getChildren().addAll(cardPane);
+			
+			cardImageView.setOnMouseClicked(e -> {
+				if (cardImageView.isVisible()) {
+					flipCardFromFrontToBack();
+				}
+			});
+			cardBackImageView.setOnMouseClicked(e -> {
+				if (cardBackImageView.isVisible() && cardNumber != 0) {
+					flipCardFromBackToFront();
+				}
+			});
+			
 		}
 
 		/**
@@ -363,7 +376,7 @@ public class PokerGame extends Application {
 																			// system
 			cardImage = new Image(fullFileName, 100, 133, true, true);
 			cardImageView.setImage(cardImage);
-			cardImageView.setVisible(true);
+			cardImageView.setVisible(true);			
 			cardBackImageView.setVisible(false);
 		}
 		
@@ -374,12 +387,11 @@ public class PokerGame extends Application {
 			cardImageView.setVisible(false);
 			cardBackImageView.setVisible(true);
 		}
-
+		
 		/**
-		 * This method swaps the card for the new drawn card with animations
-		 * @param newCardNumber
+		 * This method will flip the card from it's front to it's back
 		 */
-		public void swapCard(int newCardNumber) {
+		public void flipCardFromFrontToBack() {
 			RotateTransition rotator = new RotateTransition(Duration.millis(250), cardPane);
 			rotator.setAxis(Rotate.Y_AXIS);
 			rotator.setFromAngle(0);
@@ -397,20 +409,50 @@ public class PokerGame extends Application {
 			rotator.setToAngle(180);
 			rotator.setInterpolator(Interpolator.LINEAR);
 			rotator.play();
+		}
+		
+		/**
+		 * This flips the card from it's back to its front
+		 */
+		public void flipCardFromBackToFront() {
+			RotateTransition rotator = new RotateTransition(Duration.millis(250), cardPane);
+			rotator.setAxis(Rotate.Y_AXIS);
+			rotator.fromAngleProperty();
+			rotator.setFromAngle(180);
+			rotator.setToAngle(270);
+			rotator.setInterpolator(Interpolator.LINEAR);
+			rotator.setOnFinished(e1 -> {
+				cardImageView.setVisible(true);
+				cardBackImageView.setVisible(false);
+			});
+			rotator.play();
 
-			TranslateTransition discardTransition = new TranslateTransition(Duration.millis(750), cardPane);
-			discardTransition.setDelay(Duration.millis(500));
+			rotator = new RotateTransition(Duration.millis(750), cardPane);
+			rotator.setDelay(Duration.millis(250));
+			rotator.setAxis(Rotate.Y_AXIS);
+			rotator.setFromAngle(270);
+			rotator.setToAngle(360);
+			rotator.setInterpolator(Interpolator.LINEAR);
+			rotator.play();
+		}
+
+		/**
+		 * This method swaps the card for the new drawn card with animations
+		 * @param newCardNumber
+		 */
+		public void swapCard(int newCardNumber) {
+
+			TranslateTransition discardTransition = new TranslateTransition(Duration.millis(500), cardPane);
 			discardTransition.setToY(200 + cardPane.getLayoutY());
 			discardTransition.play();
 
-			TranslateTransition drawTransition = new TranslateTransition(Duration.millis(1750), cardPane);
-			drawTransition.setDelay(Duration.millis(1250));
+			TranslateTransition drawTransition = new TranslateTransition(Duration.millis(1000), cardPane);
+			drawTransition.setDelay(Duration.millis(500));
 			drawTransition.setFromY(-200);
 			drawTransition.setToY(cardPane.getLayoutY());
 			drawTransition.play();
 
-			rotator = new RotateTransition(Duration.millis(1000), cardPane);
-			rotator.setDelay(Duration.millis(750));
+			RotateTransition rotator = new RotateTransition(Duration.millis(250), cardPane);
 			rotator.setAxis(Rotate.Y_AXIS);
 			rotator.fromAngleProperty();
 			rotator.setFromAngle(180);
@@ -430,8 +472,8 @@ public class PokerGame extends Application {
 			});
 			rotator.play();
 
-			rotator = new RotateTransition(Duration.millis(1750), cardPane);
-			rotator.setDelay(Duration.millis(1250));
+			rotator = new RotateTransition(Duration.millis(750), cardPane);
+			rotator.setDelay(Duration.millis(250));
 			rotator.setAxis(Rotate.Y_AXIS);
 			rotator.setFromAngle(270);
 			rotator.setToAngle(360);
@@ -441,11 +483,20 @@ public class PokerGame extends Application {
 		}
 
 		/**
-		 * @return the holdButton
+		 * @return the cardImageView
 		 */
-		public ToggleButton getHoldButton() {
-			return holdButton;
+		public ImageView getCardImageView() {
+			return cardImageView;
 		}
+
+		/**
+		 * @return the cardBackImageView
+		 */
+		public ImageView getCardBackImageView() {
+			return cardBackImageView;
+		}
+
+		
 
 	}
 
@@ -497,6 +548,7 @@ public class PokerGame extends Application {
 			String winLossString = isWon(cardsAfterDraw); // gets the type of win from isWon for display
 			switch(winLossString) {
 				case "Five of a Kind":
+					wager = wager * 500;
 					break;
 				case "Royal Flush":
 					wager = wager * 250;
@@ -770,13 +822,13 @@ public class PokerGame extends Application {
 		private void drawCards() {
 			int[] cardsAfterDraw = new int[5];
 			for (int i = 0; i < 5; i++) {
-				if (!playerCards.get(i).getHoldButton().isSelected()) {
+				if ( !playerCards.get(i).getCardImageView().isVisible() /*!playerCards.get(i).getHoldButton().isSelected()*/) {
 					cardsAfterDraw[i] = deckOrder.get(currentPositionInDeck);
 					playerCards.get(i).swapCard(cardsAfterDraw[i]);
 					currentPositionInDeck++;
 				} else {
 					cardsAfterDraw[i] = playerCards.get(i).getCardNumber();
-					playerCards.get(i).getHoldButton().setSelected(false);
+					//playerCards.get(i).getHoldButton().setSelected(false);
 				}
 			}
 			manageBet(cardsAfterDraw);
