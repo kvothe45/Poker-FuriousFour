@@ -45,7 +45,7 @@ public class PokerGame extends Application {
 	private ArrayList<PlayerCard> playerCards = new ArrayList<>(); // this holds the 5 cards the player has
 	private int currentPositionInDeck = 0; // this will keep track of which card we need to deal next
 	private int numberOfDecks = 1; // integer to keep track of the number of decks being used
-	private int numberOfCardsInDeck = 52; // this will be the number of cards in the deck which changes with wildcards
+	private int numberOfCardsInDeck = 54; // this will be the number of cards in the deck which changes with wildcards
 	private int playerWalletAmount = 200; // how much the player has to bet
 	private int currentAvatar = 0; // This will hold the index of the current avatar
 	private Button drawButton = new Button("Draw"); // This button will be used to draw new cards
@@ -605,7 +605,7 @@ public class PokerGame extends Application {
 		 * @return
 		 */
 		private int getWager() {
-			if (wagerTextField.getText() != null || !wagerTextField.getText().equals("")) {
+			if (wagerTextField.getText() != null && !wagerTextField.getText().equals("")) {
 				wager = Integer.valueOf(wagerTextField.getText());// holds the value of the wager to make certain it's a valid wager
 				if (wager > playerWalletAmount) {
 					wager = playerWalletAmount;
@@ -613,6 +613,7 @@ public class PokerGame extends Application {
 				}
 			} else {
 				wager = 1;
+				wagerTextField.setText("1");
 			}
 			return wager;
 		}
