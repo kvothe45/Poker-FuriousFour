@@ -11,8 +11,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
 
-import javax.sound.midi.VoiceStatus;
-
 import javafx.animation.Interpolator;
 import javafx.animation.RotateTransition;
 import javafx.animation.TranslateTransition;
@@ -28,7 +26,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.RadioButton;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -43,9 +40,9 @@ public class PokerGame extends Application {
 	
 	private ArrayList<Integer> deckOrder = new ArrayList<>(); // this holds the order of the cards to deal
 	private ArrayList<PlayerCard> playerCards = new ArrayList<>(); // this holds the 5 cards the player has
+	private int numberOfCardsInADeck = 54; // this will be the number of cards in the deck which changes with wildcards
 	private int currentPositionInDeck = 0; // this will keep track of which card we need to deal next
 	private int numberOfDecks = 1; // integer to keep track of the number of decks being used
-	private int numberOfCardsInDeck = 54; // this will be the number of cards in the deck which changes with wildcards
 	private int playerWalletAmount = 200; // how much the player has to bet
 	private int currentAvatar = 0; // This will hold the index of the current avatar
 	private Button drawButton = new Button("Draw"); // This button will be used to draw new cards
@@ -55,9 +52,11 @@ public class PokerGame extends Application {
 	private HBox wagerBox = new HBox(); // this box is used to manage wagers placed
 	private Label playerWalletLabel = new Label(); // this will show the current amount left to bet
 	private Label alertLabel = new Label(" "); // tells the player what they won with
+	private Label instructionLabel = new Label(" "); // This will hold general instructions for the player
 	private GameMechanics gameMechanics = new GameMechanics(); // this variable will handle the overall mechanics of the gameStatus
 	private ImageView avatarImageView = new ImageView(); // this is the ImageView for the user's avatar
 	private TextField wagerTextField = new TextField(); // this will allow the user to place custom wagers
+	RadioButton oneDeck, twoDecks; // radio buttons for the number of decks to be played with
 
 	/**
 	 * Main method to start the program and just ensure that the start method is
@@ -93,19 +92,32 @@ public class PokerGame extends Application {
 	 * @return
 	 */
 	private VBox createLayoutBox() {
-		gameMechanics.populateDeck();
+		//gameMechanics.populateDeck();
 		
 		HBox upperLayoutBox = createUpperLayoutBox();
 		
 		createCardsBox();
-
+		HBox instructionBox = createInstructionBox();
+		
 		VBox layoutBox = new VBox(); // This layout holds the button and 5 card ImageViews vertically
 		layoutBox.setPadding(new Insets(0, 5, 0, 5));
 		layoutBox.setSpacing(5);
-		layoutBox.getChildren().addAll(upperLayoutBox, cardsBox);
+		layoutBox.getChildren().addAll(upperLayoutBox, cardsBox, instructionBox);
 		
 		return layoutBox;
 		
+	}
+	
+	public HBox createInstructionBox() {
+		
+		instructionLabel.setPadding(new Insets(5,0,5,0));
+		instructionLabel.setFont(Font.font(18));
+		
+		HBox instructionBox = new HBox();
+		instructionBox.setAlignment(Pos.CENTER);
+		instructionBox.getChildren().add(instructionLabel);
+		
+		return instructionBox;
 	}
 	
 	/**
@@ -119,6 +131,9 @@ public class PokerGame extends Application {
 			drawButton.setDisable(true);
 			forfeitButton.setDisable(true);
 			dealButton.setDisable(false);
+			oneDeck.setDisable(false);
+			twoDecks.setDisable(false);
+			instructionLabel.setText(" ");
 		});
 		drawButton.setDisable(true);
 		
@@ -128,6 +143,9 @@ public class PokerGame extends Application {
 			drawButton.setDisable(true);
 			forfeitButton.setDisable(true);
 			dealButton.setDisable(false);
+			oneDeck.setDisable(false);
+			twoDecks.setDisable(false);
+			instructionLabel.setText(" ");
 		});
 		forfeitButton.setDisable(true);
 		
@@ -140,7 +158,10 @@ public class PokerGame extends Application {
 			drawButton.setDisable(false);
 			forfeitButton.setDisable(false);
 			dealButton.setDisable(true);
+			oneDeck.setDisable(true);
+			twoDecks.setDisable(true);
 			alertLabel.setText(" ");
+			instructionLabel.setText("Select Cards to Discard");
 		});
 				
 		HBox placeBetsBox = new HBox(); // this box handles the betting
@@ -153,9 +174,11 @@ public class PokerGame extends Application {
 		playerWalletLabel.setPadding(new Insets(0, 15, 0, 10));
 		playerWalletLabel.setFont(Font.font(12));
 
+		HBox numberOfDecksBox = createNumberOfDecksBox();
+		
 		HBox menuBox = new HBox(); // this is the HBox to hold the menu and button items
 		menuBox.setSpacing(5);
-		menuBox.getChildren().addAll(drawButton, forfeitButton, playerWalletLabel);
+		menuBox.getChildren().addAll(drawButton, forfeitButton, playerWalletLabel, numberOfDecksBox);
 
 		alertLabel.setFont(Font.font(12));
 		alertLabel.setPadding(new Insets(0, 0, 0, 10));
@@ -183,14 +206,14 @@ public class PokerGame extends Application {
 	 */
 	private void manageAvatars() {
 		
-		avatarImageView.setImage(changeImage(true));
+		avatarImageView.setImage(changeAvatarImage(true));
 		avatarImageView.setOnMouseClicked(e -> {
-			avatarImageView.setImage(changeImage(false));
+			avatarImageView.setImage(changeAvatarImage(false));
 		});
 		
 	}
 	
-	private Image changeImage(boolean isInitial) {
+	private Image changeAvatarImage(boolean isInitial) {
 		
 		String[] avatarNames = {"ghost_skull.png", "anime_man.png", "archer.png", "bunny.png", "goblin.png", 
 				"maze_man.png", "penguin.png", "snowman.png", "steampunk_woman.png", "sugar_skull.png", 
@@ -209,6 +232,32 @@ public class PokerGame extends Application {
 																		        // system
 		return new Image(fullFileName, 60, 60, true, true);
 		
+	}
+	
+	/**
+	 * This method is used to select the number of decks a person wishes to use for 
+	 * their current game
+	 * 
+	 * @return
+	 */
+	private HBox createNumberOfDecksBox() {
+		
+		oneDeck = new RadioButton("1 Deck");
+		twoDecks = new RadioButton("2 Decks");
+		
+		ToggleGroup numberOfDecksGroup = new ToggleGroup(); // toggle group the radio buttons belong to
+		oneDeck.setToggleGroup(numberOfDecksGroup);
+		twoDecks.setToggleGroup(numberOfDecksGroup);
+		oneDeck.setSelected(true);
+
+		oneDeck.setFont(Font.font(12));
+		twoDecks.setFont(Font.font(12));
+
+		HBox numberOfDecksToggleBox = new HBox(); // HBox to hold the label and radio buttons
+		numberOfDecksToggleBox.setSpacing(5);
+		numberOfDecksToggleBox.getChildren().addAll(oneDeck, twoDecks);
+
+		return numberOfDecksToggleBox;
 	}
 	
 	
@@ -289,7 +338,8 @@ public class PokerGame extends Application {
 		private ImageView cardBackImageView = new ImageView();
 		private StackPane cardPane;
 		private boolean primaryCardBack = true;
-		
+		private boolean isDiscard = false;
+
 		/**
 		 * The is the constructor for creating the card.
 		 * 
@@ -409,6 +459,7 @@ public class PokerGame extends Application {
 			rotator.setToAngle(180);
 			rotator.setInterpolator(Interpolator.LINEAR);
 			rotator.play();
+			isDiscard = true;
 		}
 		
 		/**
@@ -434,6 +485,7 @@ public class PokerGame extends Application {
 			rotator.setToAngle(360);
 			rotator.setInterpolator(Interpolator.LINEAR);
 			rotator.play();
+			isDiscard = false;
 		}
 
 		/**
@@ -479,6 +531,7 @@ public class PokerGame extends Application {
 			rotator.setToAngle(360);
 			rotator.setInterpolator(Interpolator.LINEAR);
 			rotator.play();
+			isDiscard = false;
 
 		}
 
@@ -496,6 +549,12 @@ public class PokerGame extends Application {
 			return cardBackImageView;
 		}
 
+		/**
+		 * @return the isDiscard
+		 */
+		public boolean isDiscard() {
+			return isDiscard;
+		}
 		
 
 	}
@@ -811,8 +870,10 @@ public class PokerGame extends Application {
 		 */
 		private void populateDeck() {
 			deckOrder = new ArrayList<>();
-			for (int i = 0; i < numberOfCardsInDeck * numberOfDecks; i++) {
-				deckOrder.add(i + 1);
+			for (int i = 0; i < numberOfDecks; i++) {
+				for (int j = 0; j < numberOfCardsInADeck; j++) {
+					deckOrder.add(j + 1);
+				}
 			}
 
 		}
@@ -823,7 +884,7 @@ public class PokerGame extends Application {
 		private void drawCards() {
 			int[] cardsAfterDraw = new int[5];
 			for (int i = 0; i < 5; i++) {
-				if ( !playerCards.get(i).getCardImageView().isVisible() /*!playerCards.get(i).getHoldButton().isSelected()*/) {
+				if (playerCards.get(i).isDiscard()/*!playerCards.get(i).getHoldButton().isSelected()*/) {
 					cardsAfterDraw[i] = deckOrder.get(currentPositionInDeck);
 					playerCards.get(i).swapCard(cardsAfterDraw[i]);
 					currentPositionInDeck++;
@@ -843,7 +904,8 @@ public class PokerGame extends Application {
 		 */
 		private void newHand() {
 			if ((deckOrder.size() - currentPositionInDeck) >= (deckOrder.size() * .25) && 
-					currentPositionInDeck != 0) {
+					currentPositionInDeck != 0 && 
+					((numberOfDecks == 1 && oneDeck.isSelected()) || (numberOfDecks == 2 && twoDecks.isSelected()))) {
 				int[] cardNumberOrder = new int[5]; // and array to hold just the card numbers in the hand for sorting
 													// and processing
 				for (int i = 0; i < 5; i++) {
@@ -866,6 +928,12 @@ public class PokerGame extends Application {
 		 */
 		private void newGame() {
 			currentPositionInDeck = 0;
+			if (oneDeck.isSelected()) {
+				numberOfDecks = 1;
+			} else {
+				numberOfDecks = 2;
+			}
+			populateDeck();
 			shuffle(deckOrder);
 			int[] cardNumberOrder = new int[5]; // and array to hold just the card numbers in the hand for sorting and
 												// processing
@@ -919,10 +987,10 @@ public class PokerGame extends Application {
 		 * @return
 		 */
 		private int cardNumberCompare(int card1, int card2) {
-			int card1AbsoluteCardNumber = card1 % numberOfCardsInDeck; // numeric value of card1 as it's position in the
+			int card1AbsoluteCardNumber = card1 % numberOfCardsInADeck; // numeric value of card1 as it's position in the
 																		// deck (1 - last card number in deck)
 			if (card1AbsoluteCardNumber == 0) {
-				card1AbsoluteCardNumber = numberOfCardsInDeck;
+				card1AbsoluteCardNumber = numberOfCardsInADeck;
 			}
 			int card1ActualCardNumber; // value of card1 in it's suit (1 - 13)
 			if (card1AbsoluteCardNumber / 13 == 4) {
@@ -934,10 +1002,10 @@ public class PokerGame extends Application {
 				}
 			}
 
-			int card2AbsoluteCardNumber = card2 % numberOfCardsInDeck; // numeric value of card2 as it's position in the
+			int card2AbsoluteCardNumber = card2 % numberOfCardsInADeck; // numeric value of card2 as it's position in the
 																		// deck (1 - last card number in deck)
 			if (card2AbsoluteCardNumber == 0) {
-				card2AbsoluteCardNumber = numberOfCardsInDeck;
+				card2AbsoluteCardNumber = numberOfCardsInADeck;
 			}
 			int card2ActualCardNumber; // value of card2 in it's suit (1 - 13)
 			if (card2AbsoluteCardNumber / 13 == 4) {
