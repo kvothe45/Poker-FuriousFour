@@ -810,6 +810,14 @@ public class PokerGame extends Application {
 			return false;
 		}
 
+		/**
+		 * This method checks for four of a kind, three of a kind, etc.  Basically all the 
+		 * winning hands that deal with repeated cards.  The handResults array will be used
+		 * in the calling method what winning hand type occurred if one did
+		 * @param cardValues
+		 * @param numberOfWilds
+		 * @param handResults
+		 */
 		private void checkForMatching(Integer[] cardValues, int numberOfWilds, boolean[] handResults) {
 			
 			int[] indexOfRepeats = new int[5];
