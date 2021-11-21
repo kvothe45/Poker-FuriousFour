@@ -130,9 +130,11 @@ public class PokerGame extends Application {
 			gameMechanics.drawCards();
 			drawButton.setDisable(true);
 			forfeitButton.setDisable(true);
-			dealButton.setDisable(false);
-			oneDeck.setDisable(false);
-			twoDecks.setDisable(false);
+			if (playerWalletAmount > 0) {
+				dealButton.setDisable(false);
+				oneDeck.setDisable(false);
+				twoDecks.setDisable(false);
+			}
 			instructionLabel.setText(" ");
 		});
 		drawButton.setDisable(true);
@@ -142,9 +144,11 @@ public class PokerGame extends Application {
 			alertLabel.setText("Player Forfeits");
 			drawButton.setDisable(true);
 			forfeitButton.setDisable(true);
-			dealButton.setDisable(false);
-			oneDeck.setDisable(false);
-			twoDecks.setDisable(false);
+			if (playerWalletAmount > 0) {
+				dealButton.setDisable(false);
+				oneDeck.setDisable(false);
+				twoDecks.setDisable(false);
+			}
 			instructionLabel.setText(" ");
 		});
 		forfeitButton.setDisable(true);
@@ -648,7 +652,6 @@ public class PokerGame extends Application {
 					alertLabel.setText("You lost");
 				}  else {
 					alertLabel.setText("Game Over");
-					dealButton.setDisable(true);
 				}
 			}
 			wagerTextField.setText("");
