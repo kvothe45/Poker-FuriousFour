@@ -787,7 +787,7 @@ public class PokerGame extends Application {
 				} else {
 					return !anyRepeats(cardValues, numberOfWilds);
 				}
-			} else if ((cardValues[4 - numberOfWilds] - cardValues[0]) > 5 ) {
+			} else if ((cardValues[4 - numberOfWilds] - cardValues[0]) > 4 ) {
 				return false;
 			} else {
 				return !anyRepeats(cardValues, numberOfWilds);
