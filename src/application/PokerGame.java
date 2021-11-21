@@ -895,13 +895,12 @@ public class PokerGame extends Application {
 		private void drawCards() {
 			int[] cardsAfterDraw = new int[5];
 			for (int i = 0; i < 5; i++) {
-				if (playerCards.get(i).isDiscard()/*!playerCards.get(i).getHoldButton().isSelected()*/) {
+				if (playerCards.get(i).isDiscard()) {
 					cardsAfterDraw[i] = deckOrder.get(currentPositionInDeck);
 					playerCards.get(i).swapCard(cardsAfterDraw[i]);
 					currentPositionInDeck++;
 				} else {
 					cardsAfterDraw[i] = playerCards.get(i).getCardNumber();
-					//playerCards.get(i).getHoldButton().setSelected(false);
 				}
 			}
 			manageBet(cardsAfterDraw);
