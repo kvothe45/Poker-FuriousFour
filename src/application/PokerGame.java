@@ -327,6 +327,15 @@ public class PokerGame extends Application {
 			playerCards.get(i).flipCard();
 		}
 	}
+	
+	/**
+	 * This method rotates all the cards in the player's hand after a big win.
+	 */
+	public void bigWinAnimation() {
+		for (int i= 0; i < 5; i++) {
+			playerCards.get(i).bigWin();
+		}
+	}
 
 	/*************************************************************************/
 
@@ -538,6 +547,18 @@ public class PokerGame extends Application {
 			isDiscard = false;
 
 		}
+		
+		/**
+		 * This method rotates the card whenever a big in occurs.
+		 */
+		public void bigWin() {
+			RotateTransition bigWin = new RotateTransition(Duration.millis(1000), cardPane);
+			bigWin.setAxis(Rotate.Z_AXIS);
+			bigWin.setFromAngle(0);
+			bigWin.setToAngle(720);
+			bigWin.setInterpolator(Interpolator.LINEAR);
+			bigWin.play();
+		}
 
 		/**
 		 * @return the cardImageView
@@ -612,15 +633,19 @@ public class PokerGame extends Application {
 			switch(winLossString) {
 				case "Five of a Kind":
 					wager = wager * 500;
+					bigWinAnimation();
 					break;
 				case "Royal Flush":
 					wager = wager * 250;
+					bigWinAnimation();
 					break;
 				case "Straight Flush":
 					wager = wager * 50;
+					bigWinAnimation();
 					break;
 				case "Four of a Kind":
 					wager = wager * 25;
+					bigWinAnimation();
 					break;
 				case "Flush":
 					wager = wager * 9;
